@@ -1,0 +1,65 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# Build / distribution
+build/
+dist/
+out/
+
+# Dependencies
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# Rust
+target/
+
+# Go
+bin/
+
+# C / C++
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.dylib
+*.exe
+
+# Test / coverage
+coverage/
+.pytest_cache/
+htmlcov/
+
+# Generated files
+generated/
+
+# Local configuration
+*.local
+config.local.*
