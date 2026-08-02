@@ -1,4 +1,4 @@
-# r/uqny (reliable unified quality network)
+# r/uqny (reliable/unified quality network)
 
 **r/uqny** is an experimental, self-hosted and peer-to-peer communication project focused on resilient communication across different network transports.
 
