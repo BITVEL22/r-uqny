@@ -47,15 +47,28 @@ The project is developed incrementally. Early versions prioritize learning, corr
 
 Establish the project and protocol foundations.
 
-* [ ] Create initial protocol design
-* [ ] Define peer and session concepts
-* [ ] Define basic message format
-* [ ] Implement basic logging
-* [ ] Create initial test structure
-* [ ] Establish development documentation
-* [ ] Create a minimal CLI prototype
+### Completed
 
-**Goal:** Two r/uqny nodes can establish a basic communication session.
+* [x] Create initial protocol design
+* [x] Define basic message format
+* [x] Create initial test structure
+* [x] Create a minimal CLI prototype
+* [x] Implement node lifecycle
+* [x] Implement configuration system
+* [x] Implement cryptographic node identity
+* [x] Implement protocol message envelope
+* [x] Implement JSON message encoding/decoding
+
+### Remaining
+
+* [ ] Define peer and session concepts
+* [ ] Implement basic logging
+* [ ] Establish development documentation
+* [ ] TCP transport
+* [ ] Node-to-node connection
+* [ ] Handshake protocol
+
+**Current goal:** Two r/uqny nodes can establish a basic communication session.
 
 ---
 
@@ -310,11 +323,15 @@ r-uqny/
 ├── README.md
 ├── LICENSE
 ├── .gitignore
-├── docs/
-├── src/
-├── tests/
-└── .github/
-    └── workflows/
+├── go.mod
+├── cmd/
+│   └── r-uqny/
+└── internal/
+    ├── config/
+    ├── identity/
+    ├── node/
+    ├── protocol/
+    └── version/
 ```
 
 The repository structure will evolve as the implementation becomes more mature.
@@ -323,17 +340,21 @@ The repository structure will evolve as the implementation becomes more mature.
 
 # Development Status
 
-| Component             | Status     |
-| --------------------- | ---------- |
-| Project foundation    | 🟡 Planned |
-| P2P messaging         | ⚪ Planned  |
-| Voice communication   | ⚪ Planned  |
-| Internet P2P          | ⚪ Planned  |
-| End-to-end encryption | ⚪ Planned  |
-| Transport abstraction | ⚪ Planned  |
-| Bluetooth             | ⚪ Planned  |
-| Radio                 | ⚪ Planned  |
-| Mesh networking       | ⚪ Planned  |
+| Component             | Status      |
+| --------------------- | ----------- |
+| Project foundation    | 🟢 Complete  |
+| Node lifecycle        | 🟢 Complete  |
+| Configuration         | 🟢 Complete  |
+| Node identity         | 🟢 Complete  |
+| Protocol envelope     | 🟢 Complete  |
+| P2P messaging         | 🟡 In progress |
+| Voice communication   | ⚪ Planned   |
+| Internet P2P          | ⚪ Planned   |
+| End-to-end encryption | ⚪ Planned   |
+| Transport abstraction | ⚪ Planned   |
+| Bluetooth             | ⚪ Planned   |
+| Radio                 | ⚪ Planned   |
+| Mesh networking       | ⚪ Planned   |
 
 ---
 
