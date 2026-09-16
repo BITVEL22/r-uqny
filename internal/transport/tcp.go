@@ -1,6 +1,8 @@
 package transport
 
 import (
+	"encoding/binary"
+	"io"
 	"net"
 )
 
@@ -42,4 +44,36 @@ func Send(conn net.Conn, data []byte) error {
 
 func Receive(conn net.Conn, buffer []byte) (int, error) {
 	return conn.Read(buffer)
+}
+
+func SendMessage(conn net.Conn, data []byte) error {
+	length := uint32(len(data))
+
+	header := make([]byte, 4)
+	binary.BigEndian.PutUint32(header, length)
+
+	if _, err := conn.Write(header); err != nil {
+		return err
+	}
+
+	_, err := conn.Write(data)
+	return err
+}
+
+func ReceiveMessage(conn net.Conn) ([]byte, error) {
+	header := make([]byte, 4)
+
+	if _, err := io.ReadFull(conn, header); err != nil {
+		return nil, err
+	}
+
+	length := binary.BigEndian.Uint32(header)
+
+	data := make([]byte, length)
+
+	if _, err := io.ReadFull(conn, data); err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }

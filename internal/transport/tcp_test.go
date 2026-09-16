@@ -3,6 +3,8 @@ package transport
 import (
 	"net"
 	"testing"
+
+	"github.com/BITVEL22/r-uqny/internal/protocol"
 )
 
 func TestListenTCP(t *testing.T) {
@@ -122,4 +124,72 @@ type unexpectedDataError struct{}
 
 func (*unexpectedDataError) Error() string {
 	return "received unexpected data"
+}
+
+func TestSendReceiveProtocolMessage(t *testing.T) {
+	listener, err := ListenTCP("127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("ListenTCP() error = %v", err)
+	}
+	defer listener.Close()
+
+	message := protocol.NewTextMessage(
+		"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+		"test-message-1",
+		"hello from r/uqny",
+	)
+
+	data, err := protocol.Encode(message)
+	if err != nil {
+		t.Fatalf("protocol.Encode() error = %v", err)
+	}
+
+	done := make(chan error, 1)
+
+	go func() {
+		conn, err := listener.Accept()
+		if err != nil {
+			done <- err
+			return
+		}
+		defer conn.Close()
+
+		receivedData, err := ReceiveMessage(conn)
+		if err != nil {
+			done <- err
+			return
+		}
+
+		receivedMessage, err := protocol.Decode(receivedData)
+		if err != nil {
+			done <- err
+			return
+		}
+
+		if receivedMessage.MessageID != message.MessageID {
+			done <- &unexpectedDataError{}
+			return
+		}
+
+		if receivedMessage.Payload != message.Payload {
+			done <- &unexpectedDataError{}
+			return
+		}
+
+		done <- nil
+	}()
+
+	conn, err := DialTCP(listener.Address().String())
+	if err != nil {
+		t.Fatalf("DialTCP() error = %v", err)
+	}
+	defer conn.Close()
+
+	if err := SendMessage(conn, data); err != nil {
+		t.Fatalf("SendMessage() error = %v", err)
+	}
+
+	if err := <-done; err != nil {
+		t.Fatalf("server error = %v", err)
+	}
 }
