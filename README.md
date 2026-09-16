@@ -1,12 +1,14 @@
 # r/uqny (reliable/unified quality network)
 
-**r/uqny** is an experimental, self-hosted and peer-to-peer communication project focused on resilient communication across different network transports.
+**r/uqny** is an experimental, self-hosted, peer-to-peer communication project focused on resilient communication across different network transports.
 
-The project aims to explore how messaging and voice communication can work without depending on third-party communication services, while remaining secure, portable, and adaptable to different connectivity conditions.
+The project explores how messaging and voice communication can work without depending on third-party communication services, while remaining secure, portable, and adaptable to different connectivity conditions.
 
 > **Status: Early development / Experimental**
 
-## Project Goals
+---
+
+# Project Goals
 
 The long-term goal of r/uqny is to build a communication system that can operate across multiple transport mediums:
 
@@ -15,7 +17,7 @@ The long-term goal of r/uqny is to build a communication system that can operate
 * Radio
 * Potentially other transports in the future
 
-The application layer should remain as independent as possible from the underlying transport.
+The application and communication layers should remain as independent as possible from the underlying transport.
 
 Conceptually:
 
@@ -35,17 +37,17 @@ Conceptually:
         Internet    Bluetooth      Radio
 ```
 
-This architecture is intended to allow r/uqny to eventually switch between available transports without requiring the communication layer to be rewritten.
+This architecture is intended to allow r/uqny to eventually use different transports without requiring the communication layer to be fundamentally rewritten.
 
 ---
 
 # Roadmap
 
-The project is developed incrementally. Early versions prioritize learning, correctness, and stability over feature count.
+The project is developed incrementally. Early versions prioritize learning, correctness, interoperability, and stability over feature count.
 
 ## v0.0 — Foundation
 
-Establish the project and protocol foundations.
+Establish the core project, node, protocol, identity, and transport foundations.
 
 ### Completed
 
@@ -56,19 +58,33 @@ Establish the project and protocol foundations.
 * [x] Implement node lifecycle
 * [x] Implement configuration system
 * [x] Implement cryptographic node identity
+* [x] Implement Ed25519 node identity keys
+* [x] Derive node IDs from public keys
 * [x] Implement protocol message envelope
 * [x] Implement JSON message encoding/decoding
+* [x] Implement TCP listener
+* [x] Implement TCP dialer
+* [x] Implement length-prefixed TCP message framing
+* [x] Implement transport connection abstraction
+* [x] Implement authenticated handshake foundation
+* [x] Sign handshake data using node identity
+* [x] Verify handshake signatures and node identity
 
 ### Remaining
 
 * [ ] Define peer and session concepts
 * [ ] Implement basic logging
 * [ ] Establish development documentation
-* [ ] TCP transport
-* [ ] Node-to-node connection
-* [ ] Handshake protocol
+* [ ] Implement node-to-node session establishment
+* [ ] Integrate handshake with TCP connections
+* [ ] Define connection lifecycle after handshake
+* [ ] Implement basic peer state management
 
-**Current goal:** Two r/uqny nodes can establish a basic communication session.
+**Current goal:**
+
+> Two r/uqny nodes can establish a basic authenticated communication session.
+
+> **Note:** The current handshake is a foundation for peer authentication. It is not yet the final production security protocol and does not yet provide full replay protection or connection-specific challenge/response.
 
 ---
 
@@ -86,6 +102,8 @@ Focus on basic communication without depending on third-party communication serv
 * [ ] Timestamps
 * [ ] Basic acknowledgements
 * [ ] Connection timeout handling
+* [ ] Connection error handling
+* [ ] Peer connection state management
 
 ### v0.1.1 — Voice
 
@@ -129,13 +147,17 @@ Focus on basic communication without depending on third-party communication serv
 
 Focus on making communication private and authenticated.
 
+The cryptographic node identity and initial authenticated handshake introduced during v0.0 provide the foundation for this phase.
+
 ### v0.2.0 — Secure Identity
 
-* [ ] Peer identity
-* [ ] Public/private key pairs
+* [x] Cryptographic node identity foundation
+* [x] Public/private key pairs
+* [x] Node identity verification foundation
+* [x] Authenticated handshake foundation
 * [ ] Key exchange
-* [ ] Peer authentication
 * [ ] Secure session establishment
+* [ ] Session key management
 
 ### v0.2.1 — End-to-End Encrypted Messaging
 
@@ -163,9 +185,13 @@ r/uqny will use established cryptographic primitives and protocols rather than i
 
 ## v0.3 — Resilient Networking
 
-Introduce a transport abstraction so the communication protocol is not tightly coupled to IP networking.
+Introduce a stronger transport abstraction so the communication protocol is not tightly coupled to IP networking.
 
-* [ ] Transport abstraction
+The current TCP implementation and `Connection` abstraction are early foundations for this phase.
+
+* [x] Initial transport abstraction
+* [x] TCP transport implementation
+* [x] Connection abstraction
 * [ ] Transport interface
 * [ ] Connection monitoring
 * [ ] Automatic transport selection
@@ -193,7 +219,7 @@ Other experimental transports
 
 **v0.3 goal:**
 
-> r/uqny can intelligently handle different network conditions.
+> r/uqny can intelligently handle different network conditions and transport types.
 
 ---
 
@@ -244,7 +270,7 @@ Because radio can have significantly lower bandwidth and higher packet loss than
 
 ## v0.6 — Decentralized Communication
 
-Explore communication without relying on a central infrastructure.
+Explore communication without relying on centralized infrastructure.
 
 Potential research areas:
 
@@ -331,6 +357,7 @@ r-uqny/
     ├── identity/
     ├── node/
     ├── protocol/
+    ├── transport/
     └── version/
 ```
 
@@ -340,21 +367,47 @@ The repository structure will evolve as the implementation becomes more mature.
 
 # Development Status
 
-| Component             | Status      |
-| --------------------- | ----------- |
-| Project foundation    | 🟢 Complete  |
-| Node lifecycle        | 🟢 Complete  |
-| Configuration         | 🟢 Complete  |
-| Node identity         | 🟢 Complete  |
-| Protocol envelope     | 🟢 Complete  |
-| P2P messaging         | 🟡 In progress |
-| Voice communication   | ⚪ Planned   |
-| Internet P2P          | ⚪ Planned   |
-| End-to-end encryption | ⚪ Planned   |
-| Transport abstraction | ⚪ Planned   |
-| Bluetooth             | ⚪ Planned   |
-| Radio                 | ⚪ Planned   |
-| Mesh networking       | ⚪ Planned   |
+| Component                          | Status         |
+| ---------------------------------- | -------------- |
+| Project foundation                 | 🟢 Complete    |
+| Node lifecycle                     | 🟢 Complete    |
+| Configuration                      | 🟢 Complete    |
+| Node identity                      | 🟢 Complete    |
+| Protocol envelope                  | 🟢 Complete    |
+| TCP transport                      | 🟢 Complete    |
+| Connection abstraction             | 🟢 Complete    |
+| Authenticated handshake foundation | 🟢 Complete    |
+| Node-to-node session               | 🟡 In progress |
+| P2P messaging                      | 🟡 In progress |
+| Voice communication                | ⚪ Planned      |
+| Internet P2P                       | ⚪ Planned      |
+| End-to-end encryption              | ⚪ Planned      |
+| Transport abstraction              | 🟡 Foundation  |
+| Bluetooth                          | ⚪ Planned      |
+| Radio                              | ⚪ Planned      |
+| Mesh networking                    | ⚪ Planned      |
+
+### Status Legend
+
+* 🟢 **Complete** — implemented and tested
+* 🟡 **In progress** — actively being developed
+* ⚪ **Planned** — not yet implemented
+
+---
+
+# Development
+
+r/uqny is currently being developed in Go.
+
+Basic checks used during development:
+
+```bash
+go test ./...
+go vet ./...
+go test -race ./...
+```
+
+The project currently prioritizes small, independently testable components before integrating them into a complete communication system.
 
 ---
 
@@ -363,6 +416,8 @@ The repository structure will evolve as the implementation becomes more mature.
 r/uqny is an experimental networking and communication project created for educational, research, and development purposes.
 
 Network behavior, connectivity, and compatibility may vary depending on the underlying network, operating system, hardware, and transport medium.
+
+Security-related components should be considered experimental until they have undergone appropriate review and testing.
 
 ---
 
