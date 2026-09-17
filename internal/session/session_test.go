@@ -1,12 +1,18 @@
 package session
 
 import (
+	"errors"
 	"net"
 	"testing"
 
 	"github.com/BITVEL22/r-uqny/internal/identity"
 	"github.com/BITVEL22/r-uqny/internal/protocol"
 	"github.com/BITVEL22/r-uqny/internal/transport"
+)
+
+var (
+	errUnexpectedMessageID = errors.New("unexpected message ID")
+	errUnexpectedPayload   = errors.New("unexpected message payload")
 )
 
 func createTestConnection(t *testing.T) (*transport.Connection, *transport.Connection) {

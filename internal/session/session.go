@@ -12,9 +12,6 @@ import (
 var (
 	ErrAlreadyEstablished = errors.New("session is already established")
 	ErrNotEstablished     = errors.New("session is not established")
-
-	errUnexpectedMessageID = errors.New("unexpected message ID")
-	errUnexpectedPayload   = errors.New("unexpected message payload")
 )
 
 type State string
