@@ -438,4 +438,3 @@ Security-related components should be considered experimental until they have un
 # License
 
 This project is licensed under the MIT License. See [`LICENSE`](LICENSE) for details.
-````
