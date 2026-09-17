@@ -193,3 +193,71 @@ func TestSessionClose(t *testing.T) {
 		t.Fatalf("expected repeated close to succeed, got %v", err)
 	}
 }
+
+func TestSessionHandshake(t *testing.T) {
+	left, right := net.Pipe()
+
+	leftConn := transport.NewConnection(left)
+	rightConn := transport.NewConnection(right)
+
+	defer leftConn.Close()
+	defer rightConn.Close()
+
+	leftID, err := identity.Generate()
+	if err != nil {
+		t.Fatalf("unexpected left identity generation error: %v", err)
+	}
+
+	rightID, err := identity.Generate()
+	if err != nil {
+		t.Fatalf("unexpected right identity generation error: %v", err)
+	}
+
+	leftSession, err := New(leftID, leftConn)
+	if err != nil {
+		t.Fatalf("unexpected left session creation error: %v", err)
+	}
+
+	rightSession, err := New(rightID, rightConn)
+	if err != nil {
+		t.Fatalf("unexpected right session creation error: %v", err)
+	}
+
+	serverDone := make(chan error, 1)
+
+	go func() {
+		serverDone <- rightSession.HandshakeAsServer()
+	}()
+
+	if err := leftSession.HandshakeAsClient(); err != nil {
+		t.Fatalf("client handshake failed: %v", err)
+	}
+
+	if err := <-serverDone; err != nil {
+		t.Fatalf("server handshake failed: %v", err)
+	}
+
+	if leftSession.State() != StateEstablished {
+		t.Fatalf("expected left session to be established, got %q", leftSession.State())
+	}
+
+	if rightSession.State() != StateEstablished {
+		t.Fatalf("expected right session to be established, got %q", rightSession.State())
+	}
+
+	if leftSession.RemoteID() != rightID.NodeID {
+		t.Fatalf(
+			"expected left remote ID %q, got %q",
+			rightID.NodeID,
+			leftSession.RemoteID(),
+		)
+	}
+
+	if rightSession.RemoteID() != leftID.NodeID {
+		t.Fatalf(
+			"expected right remote ID %q, got %q",
+			leftID.NodeID,
+			rightSession.RemoteID(),
+		)
+	}
+}

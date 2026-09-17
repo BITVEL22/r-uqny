@@ -34,6 +34,24 @@ func (c *Connection) Receive() (protocol.Message, error) {
 	return protocol.Decode(data)
 }
 
+func (c *Connection) SendHandshake(handshake protocol.Handshake) error {
+	data, err := handshake.Encode()
+	if err != nil {
+		return err
+	}
+
+	return SendMessage(c.conn, data)
+}
+
+func (c *Connection) ReceiveHandshake() (protocol.Handshake, error) {
+	data, err := ReceiveMessage(c.conn)
+	if err != nil {
+		return protocol.Handshake{}, err
+	}
+
+	return protocol.DecodeHandshake(data)
+}
+
 func (c *Connection) Close() error {
 	return c.conn.Close()
 }

@@ -1,8 +1,10 @@
 package transport
 
 import (
+	"net"
 	"testing"
 
+	"github.com/BITVEL22/r-uqny/internal/identity"
 	"github.com/BITVEL22/r-uqny/internal/protocol"
 )
 
@@ -64,5 +66,60 @@ func TestConnectionSendReceive(t *testing.T) {
 
 	if err := <-done; err != nil {
 		t.Fatalf("server error = %v", err)
+	}
+}
+
+func TestConnectionHandshake(t *testing.T) {
+	left, right := net.Pipe()
+
+	leftConn := NewConnection(left)
+	rightConn := NewConnection(right)
+
+	defer leftConn.Close()
+	defer rightConn.Close()
+
+	id, err := identity.Generate()
+	if err != nil {
+		t.Fatalf("unexpected identity generation error: %v", err)
+	}
+
+	handshake, err := protocol.NewHandshake(id)
+	if err != nil {
+		t.Fatalf("unexpected handshake creation error: %v", err)
+	}
+
+	received := make(chan protocol.Handshake, 1)
+	errors := make(chan error, 1)
+
+	go func() {
+		remoteHandshake, err := rightConn.ReceiveHandshake()
+		if err != nil {
+			errors <- err
+			return
+		}
+
+		received <- remoteHandshake
+	}()
+
+	if err := leftConn.SendHandshake(handshake); err != nil {
+		t.Fatalf("unexpected handshake send error: %v", err)
+	}
+
+	select {
+	case err := <-errors:
+		t.Fatalf("unexpected handshake receive error: %v", err)
+
+	case remoteHandshake := <-received:
+		if remoteHandshake.NodeID != handshake.NodeID {
+			t.Fatalf(
+				"expected NodeID %q, got %q",
+				handshake.NodeID,
+				remoteHandshake.NodeID,
+			)
+		}
+
+		if err := remoteHandshake.Validate(); err != nil {
+			t.Fatalf("received handshake failed validation: %v", err)
+		}
 	}
 }

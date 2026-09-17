@@ -86,6 +86,70 @@ func (s *Session) Establish(remoteID string) error {
 	return nil
 }
 
+func (s *Session) HandshakeAsClient() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.state == StateEstablished {
+		return ErrAlreadyEstablished
+	}
+
+	if s.state == StateClosed {
+		return ErrNotEstablished
+	}
+
+	handshake, err := protocol.NewHandshake(s.localID)
+	if err != nil {
+		return err
+	}
+
+	if err := s.conn.SendHandshake(handshake); err != nil {
+		return err
+	}
+
+	remoteHandshake, err := s.conn.ReceiveHandshake()
+	if err != nil {
+		return err
+	}
+
+	s.remoteID = remoteHandshake.NodeID
+	s.state = StateEstablished
+
+	return nil
+}
+
+func (s *Session) HandshakeAsServer() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.state == StateEstablished {
+		return ErrAlreadyEstablished
+	}
+
+	if s.state == StateClosed {
+		return ErrNotEstablished
+	}
+
+	remoteHandshake, err := s.conn.ReceiveHandshake()
+	if err != nil {
+		return err
+	}
+
+	handshake, err := protocol.NewHandshake(s.localID)
+	if err != nil {
+		return err
+	}
+
+	if err := s.conn.SendHandshake(handshake); err != nil {
+		return err
+	}
+
+	s.remoteID = remoteHandshake.NodeID
+	s.state = StateEstablished
+
+	return nil
+}
+
 func (s *Session) Send(message protocol.Message) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
