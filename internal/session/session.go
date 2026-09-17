@@ -112,6 +112,10 @@ func (s *Session) HandshakeAsClient() error {
 		return err
 	}
 
+	if err := remoteHandshake.Validate(); err != nil {
+		return err
+	}
+
 	s.remoteID = remoteHandshake.NodeID
 	s.state = StateEstablished
 
@@ -132,6 +136,10 @@ func (s *Session) HandshakeAsServer() error {
 
 	remoteHandshake, err := s.conn.ReceiveHandshake()
 	if err != nil {
+		return err
+	}
+
+	if err := remoteHandshake.Validate(); err != nil {
 		return err
 	}
 
