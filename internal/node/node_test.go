@@ -5,6 +5,7 @@ import (
 
 	"github.com/BITVEL22/r-uqny/internal/config"
 	"github.com/BITVEL22/r-uqny/internal/identity"
+	"github.com/BITVEL22/r-uqny/internal/peer"
 	"github.com/BITVEL22/r-uqny/internal/transport"
 )
 
@@ -155,5 +156,95 @@ func TestAcceptConnection(t *testing.T) {
 
 	if err := <-done; err != nil {
 		t.Fatalf("unexpected Accept() error: %v", err)
+	}
+}
+
+func TestPeerManagement(t *testing.T) {
+	n := newTestNode(t)
+
+	id, err := identity.Generate()
+	if err != nil {
+		t.Fatalf("unexpected error generating peer identity: %v", err)
+	}
+
+	p, err := peer.New(id.NodeID, "127.0.0.1:9001")
+	if err != nil {
+		t.Fatalf("unexpected error creating peer: %v", err)
+	}
+
+	if err := n.AddPeer(p); err != nil {
+		t.Fatalf("unexpected AddPeer() error: %v", err)
+	}
+
+	if n.PeerCount() != 1 {
+		t.Fatalf("expected 1 peer, got %d", n.PeerCount())
+	}
+
+	got, err := n.GetPeer(p.ID)
+	if err != nil {
+		t.Fatalf("unexpected GetPeer() error: %v", err)
+	}
+
+	if got.ID != p.ID {
+		t.Fatalf("expected peer ID %q, got %q", p.ID, got.ID)
+	}
+
+	if err := n.AddPeer(p); err != ErrPeerExists {
+		t.Fatalf("expected ErrPeerExists, got %v", err)
+	}
+
+	if err := n.RemovePeer(p.ID); err != nil {
+		t.Fatalf("unexpected RemovePeer() error: %v", err)
+	}
+
+	if n.PeerCount() != 0 {
+		t.Fatalf("expected 0 peers, got %d", n.PeerCount())
+	}
+
+	if _, err := n.GetPeer(p.ID); err != ErrPeerNotFound {
+		t.Fatalf("expected ErrPeerNotFound, got %v", err)
+	}
+
+	if err := n.RemovePeer(p.ID); err != ErrPeerNotFound {
+		t.Fatalf("expected ErrPeerNotFound, got %v", err)
+	}
+}
+
+func TestPeersReturnsSnapshot(t *testing.T) {
+	n := newTestNode(t)
+
+	id, err := identity.Generate()
+	if err != nil {
+		t.Fatalf("unexpected error generating peer identity: %v", err)
+	}
+
+	p, err := peer.New(id.NodeID, "127.0.0.1:9001")
+	if err != nil {
+		t.Fatalf("unexpected error creating peer: %v", err)
+	}
+
+	if err := n.AddPeer(p); err != nil {
+		t.Fatalf("unexpected AddPeer() error: %v", err)
+	}
+
+	peers := n.Peers()
+
+	if len(peers) != 1 {
+		t.Fatalf("expected 1 peer, got %d", len(peers))
+	}
+
+	peers[0] = peer.Peer{}
+
+	if n.PeerCount() != 1 {
+		t.Fatal("modifying the returned slice should not change the peer count")
+	}
+
+	got, err := n.GetPeer(p.ID)
+	if err != nil {
+		t.Fatalf("unexpected GetPeer() error: %v", err)
+	}
+
+	if got.ID != p.ID {
+		t.Fatal("modifying the returned slice should not modify stored peer data")
 	}
 }
