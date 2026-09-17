@@ -1,3 +1,4 @@
+````markdown
 # r/uqny (reliable/unified quality network)
 
 **r/uqny** is an experimental, self-hosted, peer-to-peer communication project focused on resilient communication across different network transports.
@@ -47,7 +48,7 @@ The project is developed incrementally. Early versions prioritize learning, corr
 
 ## v0.0 — Foundation
 
-Establish the core project, node, protocol, identity, and transport foundations.
+Establish the core project, node, protocol, identity, transport, peer, and session foundations.
 
 ### Completed
 
@@ -69,22 +70,30 @@ Establish the core project, node, protocol, identity, and transport foundations.
 * [x] Implement authenticated handshake foundation
 * [x] Sign handshake data using node identity
 * [x] Verify handshake signatures and node identity
+* [x] Validate remote handshakes before establishing sessions
+* [x] Define peer and session concepts
+* [x] Implement peer management
+* [x] Implement session abstraction
+* [x] Implement session state management
+* [x] Integrate authenticated handshake with sessions
+* [x] Connect peers with sessions
 
 ### Remaining
 
-* [ ] Define peer and session concepts
 * [ ] Implement basic logging
 * [ ] Establish development documentation
-* [ ] Implement node-to-node session establishment
-* [ ] Integrate handshake with TCP connections
+* [ ] Implement node-level connection/session management
 * [ ] Define connection lifecycle after handshake
-* [ ] Implement basic peer state management
+* [ ] Implement connection timeout handling
+* [ ] Implement connection error handling
+* [ ] Implement challenge-response authentication
+* [ ] Implement replay protection
 
 **Current goal:**
 
 > Two r/uqny nodes can establish a basic authenticated communication session.
 
-> **Note:** The current handshake is a foundation for peer authentication. It is not yet the final production security protocol and does not yet provide full replay protection or connection-specific challenge/response.
+> **Note:** The current handshake is a foundation for peer authentication. It validates the remote handshake signature and node identity, but it is not yet the final production security protocol and does not yet provide full replay protection or connection-specific challenge/response.
 
 ---
 
@@ -95,11 +104,11 @@ Focus on basic communication without depending on third-party communication serv
 ### v0.1.0 — Messaging
 
 * [ ] Peer discovery on LAN
-* [ ] P2P connection establishment
-* [ ] Peer identification
-* [ ] Text messaging
-* [ ] Message IDs
-* [ ] Timestamps
+* [x] P2P connection establishment foundation
+* [x] Peer identification
+* [x] Text messaging foundation
+* [x] Message IDs
+* [x] Timestamps
 * [ ] Basic acknowledgements
 * [ ] Connection timeout handling
 * [ ] Connection error handling
@@ -356,7 +365,9 @@ r-uqny/
     ├── config/
     ├── identity/
     ├── node/
+    ├── peer/
     ├── protocol/
+    ├── session/
     ├── transport/
     └── version/
 ```
@@ -377,6 +388,10 @@ The repository structure will evolve as the implementation becomes more mature.
 | TCP transport                      | 🟢 Complete    |
 | Connection abstraction             | 🟢 Complete    |
 | Authenticated handshake foundation | 🟢 Complete    |
+| Peer abstraction                   | 🟢 Complete    |
+| Peer management                    | 🟢 Complete    |
+| Session abstraction                | 🟢 Complete    |
+| Session state management           | 🟢 Complete    |
 | Node-to-node session               | 🟡 In progress |
 | P2P messaging                      | 🟡 In progress |
 | Voice communication                | ⚪ Planned      |
@@ -424,3 +439,4 @@ Security-related components should be considered experimental until they have un
 # License
 
 This project is licensed under the MIT License. See [`LICENSE`](LICENSE) for details.
+````
