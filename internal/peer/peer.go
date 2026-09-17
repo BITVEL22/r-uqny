@@ -5,6 +5,12 @@ import (
 	"time"
 
 	"github.com/BITVEL22/r-uqny/internal/identity"
+	"github.com/BITVEL22/r-uqny/internal/session"
+)
+
+var (
+	ErrSessionAlreadyAttached = errors.New("session is already attached")
+	ErrSessionNotAttached     = errors.New("session is not attached")
 )
 
 type State string
@@ -23,6 +29,7 @@ type Peer struct {
 	State         State
 	LastConnected time.Time
 	LastSeen      time.Time
+	Session       *session.Session
 }
 
 func New(id string, address string) (Peer, error) {
@@ -69,4 +76,38 @@ func (p *Peer) MarkConnected() {
 
 func (p *Peer) MarkSeen() {
 	p.LastSeen = time.Now().UTC()
+}
+
+func (p *Peer) AttachSession(s *session.Session) error {
+	if s == nil {
+		return errors.New("session cannot be nil")
+	}
+
+	if p.Session != nil {
+		return ErrSessionAlreadyAttached
+	}
+
+	p.Session = s
+	return nil
+}
+
+func (p *Peer) DetachSession() error {
+	if p.Session == nil {
+		return ErrSessionNotAttached
+	}
+
+	p.Session = nil
+	return nil
+}
+
+func (p *Peer) HasSession() bool {
+	return p.Session != nil
+}
+
+func (p *Peer) GetSession() (*session.Session, error) {
+	if p.Session == nil {
+		return nil, ErrSessionNotAttached
+	}
+
+	return p.Session, nil
 }
