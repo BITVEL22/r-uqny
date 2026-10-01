@@ -2,9 +2,14 @@ package transport
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 	"net"
 )
+
+const MaxMessageSize = 10 << 20 // 10 MB
+
+var ErrMessageTooLarge = errors.New("message exceeds maximum size")
 
 type TCPListener struct {
 	listener net.Listener
@@ -68,6 +73,10 @@ func ReceiveMessage(conn net.Conn) ([]byte, error) {
 	}
 
 	length := binary.BigEndian.Uint32(header)
+
+	if length > MaxMessageSize {
+		return nil, ErrMessageTooLarge
+	}
 
 	data := make([]byte, length)
 

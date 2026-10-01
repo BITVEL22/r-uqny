@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -109,6 +110,10 @@ func TestSaveAndLoad(t *testing.T) {
 }
 
 func TestSaveUsesRestrictedPermissions(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("file permissions not enforced on Windows")
+	}
+
 	dir := t.TempDir()
 	path := filepath.Join(dir, "identity.json")
 

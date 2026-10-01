@@ -2,11 +2,13 @@ package node
 
 import (
 	"errors"
+	"log/slog"
 	"sync"
 
 	"github.com/BITVEL22/r-uqny/internal/config"
 	"github.com/BITVEL22/r-uqny/internal/identity"
 	"github.com/BITVEL22/r-uqny/internal/peer"
+	"github.com/BITVEL22/r-uqny/internal/session"
 	"github.com/BITVEL22/r-uqny/internal/transport"
 )
 
@@ -166,3 +168,130 @@ func (n *Node) Peers() []peer.Peer {
 
 	return result
 }
+
+// AcceptSession accepts an incoming connection and performs a server-side handshake.
+func (n *Node) AcceptSession() (*session.Session, error) {
+	conn, err := n.Accept()
+	if err != nil {
+		return nil, err
+	}
+
+	sess, err := session.New(n.Identity, conn)
+	if err != nil {
+		conn.Close()
+		return nil, err
+	}
+
+	if err := sess.HandshakeAsServer(); err != nil {
+		sess.Close()
+		return nil, err
+	}
+
+	return sess, nil
+}
+
+// Connect dials a remote node and performs a client-side handshake.
+func (n *Node) Connect(address string) (*session.Session, error) {
+	rawConn, err := transport.DialTCP(address)
+	if err != nil {
+		return nil, err
+	}
+
+	conn := transport.NewConnection(rawConn)
+
+	sess, err := session.New(n.Identity, conn)
+	if err != nil {
+		conn.Close()
+		return nil, err
+	}
+
+	if err := sess.HandshakeAsClient(); err != nil {
+		sess.Close()
+		return nil, err
+	}
+
+	return sess, nil
+}
+
+// Serve starts accepting connections in a loop.
+// It blocks until the node is stopped or an unrecoverable error occurs.
+func (n *Node) Serve() error {
+	for {
+		conn, err := n.Accept()
+		if err != nil {
+			n.mu.RLock()
+			status := n.Status
+			n.mu.RUnlock()
+
+			if status == StatusStopped {
+				return nil
+			}
+
+			slog.Error("failed to accept connection", "error", err)
+			continue
+		}
+
+		go n.handleConnection(conn)
+	}
+}
+
+func (n *Node) handleConnection(conn *transport.Connection) {
+	remoteAddr := conn.RemoteAddr().String()
+
+	sess, err := session.New(n.Identity, conn)
+	if err != nil {
+		slog.Error("failed to create session",
+			"error", err,
+			"remote_addr", remoteAddr,
+		)
+		conn.Close()
+		return
+	}
+
+	if err := sess.HandshakeAsServer(); err != nil {
+		slog.Error("handshake failed",
+			"error", err,
+			"remote_addr", remoteAddr,
+		)
+		sess.Close()
+		return
+	}
+
+	remoteID := sess.RemoteID()
+
+	p, err := peer.New(remoteID, remoteAddr)
+	if err != nil {
+		slog.Error("failed to create peer",
+			"error", err,
+			"remote_addr", remoteAddr,
+		)
+		sess.Close()
+		return
+	}
+
+	if err := p.AttachSession(sess); err != nil {
+		slog.Error("failed to attach session",
+			"error", err,
+			"remote_id", remoteID,
+		)
+		sess.Close()
+		return
+	}
+
+	p.MarkConnected()
+
+	if err := n.AddPeer(p); err != nil {
+		slog.Error("failed to add peer",
+			"error", err,
+			"remote_id", remoteID,
+		)
+		sess.Close()
+		return
+	}
+
+	slog.Info("peer connected",
+		"remote_id", remoteID,
+		"remote_addr", remoteAddr,
+	)
+}
+
