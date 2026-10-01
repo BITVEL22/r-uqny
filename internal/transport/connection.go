@@ -2,6 +2,7 @@ package transport
 
 import (
 	"net"
+	"time"
 
 	"github.com/BITVEL22/r-uqny/internal/protocol"
 )
@@ -54,4 +55,29 @@ func (c *Connection) ReceiveHandshake() (protocol.Handshake, error) {
 
 func (c *Connection) Close() error {
 	return c.conn.Close()
+}
+
+// SetDeadline sets the read and write deadlines on the connection.
+func (c *Connection) SetDeadline(t time.Time) error {
+	return c.conn.SetDeadline(t)
+}
+
+// SetReadDeadline sets the read deadline on the connection.
+func (c *Connection) SetReadDeadline(t time.Time) error {
+	return c.conn.SetReadDeadline(t)
+}
+
+// SetWriteDeadline sets the write deadline on the connection.
+func (c *Connection) SetWriteDeadline(t time.Time) error {
+	return c.conn.SetWriteDeadline(t)
+}
+
+// RemoteAddr returns the remote address of the connection.
+func (c *Connection) RemoteAddr() net.Addr {
+	return c.conn.RemoteAddr()
+}
+
+// LocalAddr returns the local address of the connection.
+func (c *Connection) LocalAddr() net.Addr {
+	return c.conn.LocalAddr()
 }

@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"encoding/binary"
 	"net"
 	"testing"
 
@@ -191,5 +192,29 @@ func TestSendReceiveProtocolMessage(t *testing.T) {
 
 	if err := <-done; err != nil {
 		t.Fatalf("server error = %v", err)
+	}
+}
+
+func TestReceiveMessageTooLarge(t *testing.T) {
+	left, right := net.Pipe()
+	defer left.Close()
+	defer right.Close()
+
+	writeDone := make(chan error, 1)
+
+	go func() {
+		header := make([]byte, 4)
+		binary.BigEndian.PutUint32(header, MaxMessageSize+1)
+		_, err := left.Write(header)
+		writeDone <- err
+	}()
+
+	_, err := ReceiveMessage(right)
+	if err != ErrMessageTooLarge {
+		t.Fatalf("expected ErrMessageTooLarge, got %v", err)
+	}
+
+	if err := <-writeDone; err != nil {
+		t.Fatalf("unexpected write error: %v", err)
 	}
 }

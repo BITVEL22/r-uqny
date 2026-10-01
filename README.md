@@ -79,12 +79,12 @@ Establish the core project, node, protocol, identity, transport, peer, and sessi
 
 ### Remaining
 
-* [ ] Implement basic logging
+* [x] Implement basic logging
 * [ ] Establish development documentation
-* [ ] Implement node-level connection/session management
-* [ ] Define connection lifecycle after handshake
-* [ ] Implement connection timeout handling
-* [ ] Implement connection error handling
+* [x] Implement node-level connection/session management
+* [x] Define connection lifecycle after handshake
+* [x] Implement connection timeout handling
+* [x] Implement connection error handling
 * [ ] Implement challenge-response authentication
 * [ ] Implement replay protection
 
@@ -363,6 +363,7 @@ r-uqny/
 └── internal/
     ├── config/
     ├── identity/
+    ├── logging/
     ├── node/
     ├── peer/
     ├── protocol/
@@ -391,7 +392,7 @@ The repository structure will evolve as the implementation becomes more mature.
 | Peer management                    | 🟢 Complete    |
 | Session abstraction                | 🟢 Complete    |
 | Session state management           | 🟢 Complete    |
-| Node-to-node session               | 🟡 In progress |
+| Node-to-node session               | 🟢 Complete    |
 | P2P messaging                      | 🟡 In progress |
 | Voice communication                | ⚪ Planned      |
 | Internet P2P                       | ⚪ Planned      |

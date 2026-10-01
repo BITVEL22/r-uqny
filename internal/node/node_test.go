@@ -248,3 +248,58 @@ func TestPeersReturnsSnapshot(t *testing.T) {
 		t.Fatal("modifying the returned slice should not modify stored peer data")
 	}
 }
+
+func TestAcceptSessionAndConnect(t *testing.T) {
+	server := newTestNode(t)
+
+	if err := server.Start(); err != nil {
+		t.Fatalf("unexpected error starting server: %v", err)
+	}
+	defer server.Stop()
+
+	client := newTestNode(t)
+
+	type sessionResult struct {
+		remoteID string
+		err      error
+	}
+
+	serverDone := make(chan sessionResult, 1)
+
+	go func() {
+		sess, err := server.AcceptSession()
+		if err != nil {
+			serverDone <- sessionResult{err: err}
+			return
+		}
+		defer sess.Close()
+		serverDone <- sessionResult{remoteID: sess.RemoteID()}
+	}()
+
+	clientSession, err := client.Connect(server.Listener.Address().String())
+	if err != nil {
+		t.Fatalf("unexpected Connect() error: %v", err)
+	}
+	defer clientSession.Close()
+
+	result := <-serverDone
+	if result.err != nil {
+		t.Fatalf("unexpected AcceptSession() error: %v", result.err)
+	}
+
+	if clientSession.RemoteID() != server.ID {
+		t.Fatalf(
+			"expected client remote ID %q, got %q",
+			server.ID,
+			clientSession.RemoteID(),
+		)
+	}
+
+	if result.remoteID != client.ID {
+		t.Fatalf(
+			"expected server remote ID %q, got %q",
+			client.ID,
+			result.remoteID,
+		)
+	}
+}

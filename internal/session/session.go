@@ -3,11 +3,14 @@ package session
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/BITVEL22/r-uqny/internal/identity"
 	"github.com/BITVEL22/r-uqny/internal/protocol"
 	"github.com/BITVEL22/r-uqny/internal/transport"
 )
+
+const HandshakeTimeout = 30 * time.Second
 
 var (
 	ErrAlreadyEstablished = errors.New("session is already established")
@@ -23,7 +26,8 @@ const (
 )
 
 type Session struct {
-	mu       sync.Mutex
+	stateMu  sync.RWMutex
+	writeMu  sync.Mutex
 	state    State
 	localID  identity.Identity
 	remoteID string
@@ -47,22 +51,22 @@ func New(localID identity.Identity, conn *transport.Connection) (*Session, error
 }
 
 func (s *Session) State() State {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.stateMu.RLock()
+	defer s.stateMu.RUnlock()
 
 	return s.state
 }
 
 func (s *Session) RemoteID() string {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.stateMu.RLock()
+	defer s.stateMu.RUnlock()
 
 	return s.remoteID
 }
 
 func (s *Session) Establish(remoteID string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.stateMu.Lock()
+	defer s.stateMu.Unlock()
 
 	if s.state == StateEstablished {
 		return ErrAlreadyEstablished
@@ -87,8 +91,8 @@ func (s *Session) Establish(remoteID string) error {
 }
 
 func (s *Session) HandshakeAsClient() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.stateMu.Lock()
+	defer s.stateMu.Unlock()
 
 	if s.state == StateEstablished {
 		return ErrAlreadyEstablished
@@ -97,6 +101,9 @@ func (s *Session) HandshakeAsClient() error {
 	if s.state == StateClosed {
 		return ErrNotEstablished
 	}
+
+	s.conn.SetDeadline(time.Now().Add(HandshakeTimeout))
+	defer s.conn.SetDeadline(time.Time{})
 
 	handshake, err := protocol.NewHandshake(s.localID)
 	if err != nil {
@@ -123,8 +130,8 @@ func (s *Session) HandshakeAsClient() error {
 }
 
 func (s *Session) HandshakeAsServer() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.stateMu.Lock()
+	defer s.stateMu.Unlock()
 
 	if s.state == StateEstablished {
 		return ErrAlreadyEstablished
@@ -133,6 +140,9 @@ func (s *Session) HandshakeAsServer() error {
 	if s.state == StateClosed {
 		return ErrNotEstablished
 	}
+
+	s.conn.SetDeadline(time.Now().Add(HandshakeTimeout))
+	defer s.conn.SetDeadline(time.Time{})
 
 	remoteHandshake, err := s.conn.ReceiveHandshake()
 	if err != nil {
@@ -158,22 +168,31 @@ func (s *Session) HandshakeAsServer() error {
 	return nil
 }
 
+// Send sends a protocol message over the established session.
+// Send is safe to call concurrently with Receive.
 func (s *Session) Send(message protocol.Message) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.stateMu.RLock()
+	state := s.state
+	s.stateMu.RUnlock()
 
-	if s.state != StateEstablished {
+	if state != StateEstablished {
 		return ErrNotEstablished
 	}
+
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
 
 	return s.conn.Send(message)
 }
 
+// Receive reads a protocol message from the established session.
+// Receive is safe to call concurrently with Send.
 func (s *Session) Receive() (protocol.Message, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.stateMu.RLock()
+	state := s.state
+	s.stateMu.RUnlock()
 
-	if s.state != StateEstablished {
+	if state != StateEstablished {
 		return protocol.Message{}, ErrNotEstablished
 	}
 
@@ -181,8 +200,8 @@ func (s *Session) Receive() (protocol.Message, error) {
 }
 
 func (s *Session) Close() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.stateMu.Lock()
+	defer s.stateMu.Unlock()
 
 	if s.state == StateClosed {
 		return nil
@@ -193,3 +212,4 @@ func (s *Session) Close() error {
 
 	return err
 }
+
