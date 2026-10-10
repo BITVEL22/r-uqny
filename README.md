@@ -80,19 +80,19 @@ Establish the core project, node, protocol, identity, transport, peer, and sessi
 ### Remaining
 
 * [x] Implement basic logging
-* [ ] Establish development documentation
+* [x] Establish development documentation
 * [x] Implement node-level connection/session management
 * [x] Define connection lifecycle after handshake
 * [x] Implement connection timeout handling
 * [x] Implement connection error handling
-* [ ] Implement challenge-response authentication
-* [ ] Implement replay protection
+* [x] Implement challenge-response authentication
+* [x] Implement replay protection
 
 **Current goal:**
 
 > Two r/uqny nodes can establish a basic authenticated communication session.
 
-> **Note:** The current handshake is a foundation for peer authentication. It validates the remote handshake signature and node identity, but it is not yet the final production security protocol and does not yet provide full replay protection or connection-specific challenge/response.
+> **Note:** The current handshake validates remote handshake signatures, node identity, random challenge nonces, and timestamp age to provide challenge-response authentication and replay protection.
 
 ---
 
